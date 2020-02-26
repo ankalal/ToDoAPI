@@ -25,7 +25,6 @@ router.use(async(req, res, next) => {
         }
     }
     catch (e) {
-        console.log(e)
         res.sendStatus(401);
     }
 })
@@ -58,7 +57,7 @@ router.route("/")
                     status: "new",
                     userId: req.headers.userId
                 }).save()
-                res.send({data:{name:todo.name, status:todo.status},msg:"Todo Created",status:"ok"})
+                res.send({data:{name:todo.name, status:todo.status, id:todo._id},msg:"Todo Created",status:"ok"})
             }
             else{
                 res.send({
@@ -77,8 +76,7 @@ router.route("/:id")
     // Set Task Completed
     .put(async (req, res) => {
         try {
-            const todo = await Todo.update({ _id: req.params.id, userId: req.headers.userId, status: "new" }, { status: "done" }, { new: true })
-            console.log(todo)
+            const todo = await Todo.findOneAndUpdate({ _id: req.params.id, userId: req.headers.userId, status: "new" }, { status: "done" }, { new: true })
             res.send({msg:"Task Completed",status:"ok",data:{name:todo.name, status:todo.status}})
         }
         catch (e) {
@@ -89,7 +87,7 @@ router.route("/:id")
     // Delete a task
     .delete(async (req, res) => {
         try {
-            const todo = await Todo.update({ _id: req.params.id, userId: req.headers.userId }, { status: "delete" }, { new: true })
+            const todo = await Todo.findOneAndUpdate({ _id: req.params.id, userId: req.headers.userId }, { status: "delete" }, { new: true })
             res.send({msg:"Task Deleted",status:"ok",data:{name:todo.name, status:todo.status}})
         }
         catch (e) {

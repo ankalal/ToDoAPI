@@ -26,7 +26,7 @@ router.post("/", async (req, res) => {
         if (e.code == "11000") {
             res.send({
                 msg: "User Name Already Exist",
-                status: "invalidParam"
+                status: "userAlreadyExist"
             })
         }
         else {
@@ -57,7 +57,7 @@ router.post("/login", async (req, res) => {
                     else {
                         res.send({
                             msg: "Invalid Password",
-                            status: "invalidParam"
+                            status: "invalidPass"
                         })
                     }
                 })
@@ -65,7 +65,7 @@ router.post("/login", async (req, res) => {
             else {
                 res.send({
                     msg: "Invalid UserName",
-                    status: "invalidParam"
+                    status: "invalidUserName"
                 })
             }
         }
@@ -97,7 +97,7 @@ router.get("/logout", async (req, res) => {
         else {
             res.send({
                 msg: "Auth Token missing",
-                status: "invalidParam"
+                status: "tokenMissing"
             })
         }
     }
