@@ -6,53 +6,73 @@ const Token = require("./helper/token")
 
 router.post("/", async (req, res) => {
     try {
-        if(req.body.userName && req.body.password){
+        const userName = typeof (req.body.userName) == "string" && req.body.userName.trim().length > 0 ? req.body.userName.trim() : false
+        const password = typeof (req.body.password) == "string" && req.body.password.trim().length > 0 ? req.body.password.trim() : false
+        if (userName && password) {
             const user = await new User({
                 userName: req.body.userName,
                 password: req.body.password
             }).save();
-            res.send({ msg: "User Created", data:{userName:user.userName}, status: "ok" })
+            res.send({ msg: "User Created", data: { userName: user.userName }, status: "ok" })
         }
-        else{
-            res.status(401).send({
-                msg: "Invalid parametes",
-                status: "invalidParametes"
+        else {
+            res.send({
+                msg: "Invalid parameters",
+                status: "invalidParam"
             })
         }
     }
     catch (e) {
-        console.log(e)
-        res.sendStatus(400)
+        if (e.code == "11000") {
+            res.send({
+                msg: "User Name Already Exist",
+                status: "invalidParam"
+            })
+        }
+        else {
+            console.log(e)
+            res.sendStatus(400)
+        }
     }
 })
 
 router.post("/login", async (req, res) => {
     try {
-        const user = await User.findOne({ userName: req.body.userName })
-        if(user){
-            user.comparePassword(req.body.password, (err, isMatch) => {
-                if (err)
-                    throw err;
-                if (isMatch) {
-                    token = Token.create(user._id);
-                    res.send({
-                        msg: "login successful",
-                        data: { userName: user.userName, token }, 
-                        status: "ok"
-                    })
-                }
-                else {
-                    res.status(400).send({
-                        msg: "Invalid Password",
-                        status: "invalidPassword"
-                    })
-                }
-            })
+        const userName = typeof (req.body.userName) == "string" && req.body.userName.trim().length > 0 ? req.body.userName.trim() : false
+        const password = typeof (req.body.password) == "string" && req.body.password.trim().length > 0 ? req.body.password.trim() : false
+        if (userName && password) {
+            const user = await User.findOne({ userName })
+            if (user) {
+                user.comparePassword(password, (err, isMatch) => {
+                    if (err)
+                        throw err;
+                    if (isMatch) {
+                        token = Token.create(user._id);
+                        res.send({
+                            msg: "login successful",
+                            data: { userName: user.userName, token },
+                            status: "ok"
+                        })
+                    }
+                    else {
+                        res.send({
+                            msg: "Invalid Password",
+                            status: "invalidParam"
+                        })
+                    }
+                })
+            }
+            else {
+                res.send({
+                    msg: "Invalid UserName",
+                    status: "invalidParam"
+                })
+            }
         }
-        else{
-            res.status(400).send({
-                msg: "Invalid UserName",
-                status: "invalidUserName"
+        else {
+            res.send({
+                msg: "Invalid parameters",
+                status: "invalidParam"
             })
         }
     }
@@ -62,8 +82,8 @@ router.post("/login", async (req, res) => {
     }
 })
 
-router.post("/logout",async(req,res)=>{
-    try{
+router.get("/logout", async (req, res) => {
+    try {
         const bearerHeader = req.headers["authorization"];
         if (bearerHeader) {
             const bearer = bearerHeader.split(" ");
@@ -74,11 +94,14 @@ router.post("/logout",async(req,res)=>{
                 status: "ok"
             })
         }
-        else{
-            throw new Error("No Token found")
+        else {
+            res.send({
+                msg: "Auth Token missing",
+                status: "invalidParam"
+            })
         }
     }
-    catch(e){
+    catch (e) {
         console.log(e)
         res.sendStatus(400)
     }

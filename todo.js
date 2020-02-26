@@ -31,6 +31,7 @@ router.use(async(req, res, next) => {
 })
 
 router.route("/")
+    // Get all todo of a user
     .get(async (req, res) => {
         try {
             const todo = await Todo.find({ userId: req.headers.userId, status: { $ne: "delete" } },
@@ -47,14 +48,24 @@ router.route("/")
             res.sendStatus(400)
         }
     })
+    // Add Todo 
     .post(async (req, res) => {
         try {
-            const todo = await new Todo({
-                name: req.body.name,
-                status: "new",
-                userId: req.headers.userId
-            }).save()
-            res.send({data:{name:todo.name, status:todo.status},msg:"Todo Created",status:"ok"})
+            const name = typeof (req.body.name) == "string" && req.body.name.trim().length > 0 ? req.body.name.trim() : false
+            if(name){
+                const todo = await new Todo({
+                    name: req.body.name,
+                    status: "new",
+                    userId: req.headers.userId
+                }).save()
+                res.send({data:{name:todo.name, status:todo.status},msg:"Todo Created",status:"ok"})
+            }
+            else{
+                res.send({
+                    msg: "Invalid Task",
+                    status: "invalidParam"
+                })
+            }
         }
         catch (e) {
             console.log(e)
@@ -63,9 +74,11 @@ router.route("/")
     })
 
 router.route("/:id")
+    // Set Task Completed
     .put(async (req, res) => {
         try {
             const todo = await Todo.update({ _id: req.params.id, userId: req.headers.userId, status: "new" }, { status: "done" }, { new: true })
+            console.log(todo)
             res.send({msg:"Task Completed",status:"ok",data:{name:todo.name, status:todo.status}})
         }
         catch (e) {
@@ -73,6 +86,7 @@ router.route("/:id")
             res.sendStatus(400)
         }
     })
+    // Delete a task
     .delete(async (req, res) => {
         try {
             const todo = await Todo.update({ _id: req.params.id, userId: req.headers.userId }, { status: "delete" }, { new: true })
